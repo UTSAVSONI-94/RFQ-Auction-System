@@ -69,15 +69,6 @@
 - Bid form is disabled unless `status === "Active"`, and converts the `<input type="date">` quote validity into a UTC midnight ISO string (`YYYY-MM-DDT00:00:00Z`).
 - `L1` row in the bids table is highlighted, and `TIME_EXTENDED` entries in the activity log show `old_close_time -> new_close_time`.
 
-## Deliverables (Section 9)
-
-- Completed all Section 9 deliverables:
-  1. High Level Design with architecture diagram (`docs/hld.md`)
-  2. Database Schema Design document (`docs/schema.md`)
-  3. Backend code (`backend/app/`)
-  4. Frontend code (`frontend/src/`)
-- Plain, human-written style without boilerplate.
-
 
 
 
