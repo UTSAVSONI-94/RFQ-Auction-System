@@ -8,53 +8,37 @@ A reverse auction / RFQ system for freight. Buyers create an RFQ with a deadline
 
 ## Architecture Diagram
 
-![System Architecture](architecture.svg)
-
-### Component Diagram (Mermaid)
-
 ```mermaid
-flowchart TD
-    subgraph Frontend["Frontend (React + Vite :5173)"]
-        List["RfqList (/)"]
-        Create["CreateRfq (/create)"]
-        Details["RfqDetails (/rfqs/:id)"]
-        Timer["Countdown (Server Offset)"]
-        Poll["5s Polling Hook"]
-        Details --> Timer
-        Details --> Poll
+graph TD
+    subgraph Frontend [React + Vite]
+        List[RFQ List]
+        Create[Create RFQ]
+        Details[RFQ Details + Countdown]
     end
 
-    subgraph Backend["Backend (FastAPI :8000)"]
-        Endpoints["REST API (main.py)"]
-        BidEngine["Bid Engine (bid_service.py)"]
-        RankCalc["Ranking Engine (ranking.py)"]
-        StatusCalc["Status Resolver (status.py)"]
-        Clock["Clock Helper (clock.py)"]
-
-        Endpoints --> BidEngine
-        Endpoints --> RankCalc
-        Endpoints --> StatusCalc
-        BidEngine --> RankCalc
-        BidEngine --> Clock
+    subgraph Backend [FastAPI]
+        API[API Endpoints]
+        BidService[Bid Service]
+        Ranking[Ranking Logic]
+        Status[Status Resolver]
     end
 
-    subgraph Database["Database (PostgreSQL :5432)"]
-        T_RFQ[("rfqs")]
-        T_SUP[("suppliers")]
-        T_BID[("bids")]
-        T_LOG[("activity_logs")]
+    subgraph Database [PostgreSQL]
+        RFQs[(rfqs)]
+        Bids[(bids)]
+        Suppliers[(suppliers)]
+        Logs[(activity_logs)]
     end
 
-    List -->|"GET /rfqs"| Endpoints
-    Create -->|"POST /rfqs"| Endpoints
-    Details -->|"GET /rfqs/:id"| Endpoints
-    Details -->|"POST /rfqs/:id/bids"| Endpoints
-
-    BidEngine -->|"SELECT ... FOR UPDATE"| T_RFQ
-    BidEngine -->|"Insert bid & update close_time"| T_BID
-    BidEngine -->|"Find or create supplier"| T_SUP
-    BidEngine -->|"Log BID_PLACED / TIME_EXTENDED"| T_LOG
-    RankCalc -->|"Query latest bid per supplier"| T_BID
+    Frontend -->|HTTP / JSON| API
+    API --> BidService
+    API --> Ranking
+    API --> Status
+    BidService -->|SELECT FOR UPDATE| RFQs
+    BidService -->|Insert| Bids
+    BidService -->|Audit| Logs
+    BidService --> Suppliers
+    Ranking -->|Read latest bids| Bids
 ```
 
 ### Text / ASCII View
@@ -81,7 +65,7 @@ flowchart TD
 |                     POSTGRESQL (rfq_auction)                |
 |  - rfqs           - suppliers                               |
 |  - bids           - activity_logs                           |
-+-------------------------------------------------------------+
++------------------------------+------------------------------+
 ```
 
 ---
